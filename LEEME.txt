@@ -1,0 +1,26 @@
+LA PERLA FC — pasos para tener tu APK
+=====================================
+
+1) NUBE (Supabase, gratis)
+   - Crea una cuenta en supabase.com y un proyecto nuevo.
+   - Menú "SQL Editor" > pega el contenido de supabase.sql > Run.
+   - Menú "Authentication" > "Users" > Add user: tu correo y una contraseña (marca auto-confirmar).
+   - Luego en Authentication > Sign In / Providers, desactiva "Allow new users to sign up"
+     (así solo tú puedes ser admin).
+   - Menú "Project Settings" > "API": copia "Project URL" y la clave "anon public".
+   - Abre index.html con un editor de texto y reemplaza SB_URL y SB_KEY (busca "PEGA_AQUI").
+     La clave anon es pública por diseño; la seguridad la dan las reglas del SQL.
+
+2) PUBLICAR la carpeta (necesita una dirección https)
+   - Fácil: netlify.com/drop, arrastra esta carpeta completa. Te da un enlace.
+
+3) APK
+   - Entra a pwabuilder.com, pega el enlace, "Package for stores" > Android > descarga el APK.
+   - En el celular: permite "instalar apps de origen desconocido" e instala el APK.
+   - Sin APK: abre el enlace en Chrome > menú > "Instalar app" (funciona igual).
+
+USO
+   - Todos pueden ver. Para editar, toca el candado 🔐 y entra con tu correo (admin).
+   - Antes de configurar Supabase, la app funciona sola en tu celular, solo como prueba.
+
+Más adelante: envío público de clips con aprobación del admin.

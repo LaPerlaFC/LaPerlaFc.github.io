@@ -1,0 +1,236 @@
+<!DOCTYPE html>
+<html lang="es"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>La Perla FC</title>
+<link rel="manifest" href="manifest.webmanifest"><meta name="theme-color" content="#10243a"><link rel="icon" href="icon-192.png"><link rel="apple-touch-icon" href="icon-192.png">
+<style>
+:root{--bg:#f3f6f8;--card:#fff;--tx:#10243a;--mu:#6b7c8f;--ac:#0e7c86;--on:#fff;--bd:#dde4ea;color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#0c1722;--card:#15283a;--tx:#eaf1f7;--mu:#8fa3b5;--ac:#3fc1c9;--on:#06222a;--bd:#25405a;color-scheme:dark}}
+:root[data-theme="dark"]{--bg:#0c1722;--card:#15283a;--tx:#eaf1f7;--mu:#8fa3b5;--ac:#3fc1c9;--on:#06222a;--bd:#25405a;color-scheme:dark}
+*{box-sizing:border-box}html,body{margin:0}
+body{background:var(--bg);color:var(--tx);font:15px/1.4 system-ui,-apple-system,"Segoe UI",sans-serif;padding-bottom:84px}
+header{background:#10243a;color:#fff;padding:14px 16px;display:flex;align-items:center;gap:10px}
+.logo{width:42px;height:42px;border-radius:50%;background:radial-gradient(circle at 35% 30%,#fff,#bfe9ec 60%,#3fc1c9);display:grid;place-items:center;font-size:20px;overflow:hidden;flex:none}
+.logo img{width:100%;height:100%;object-fit:contain}
+header h1{font-size:18px;margin:0}header small{opacity:.75;display:block;font-size:12px}
+main{padding:14px;max-width:640px;margin:auto}
+.row{display:flex;align-items:center;gap:10px}.sp{flex:1}
+.card{background:var(--card);border:1px solid var(--bd);border-radius:14px;padding:12px;margin-bottom:10px}
+.btn{background:var(--ac);color:var(--on);border:0;border-radius:10px;padding:10px 14px;font:inherit;font-weight:600}
+.btn.g{background:transparent;color:var(--ac);border:1px solid var(--ac)}.btn.r{background:#c0392b;color:#fff}.btn.s{padding:6px 10px;font-size:13px}
+h2{font-size:17px;margin:4px 0 12px}
+.av{width:52px;height:52px;border-radius:50%;background:var(--bd);display:grid;place-items:center;font-weight:700;color:var(--mu);flex:none;overflow:hidden}
+.av img{width:100%;height:100%;object-fit:cover}
+.num{font-weight:800;color:var(--ac);font-size:18px;min-width:30px}
+.mu{color:var(--mu);font-size:13px}
+.pill{display:inline-block;background:var(--bd);border-radius:99px;padding:1px 9px;font-size:12px}
+.stats{display:flex;gap:12px;text-align:center}.stats b{display:block;font-size:17px}
+nav{position:fixed;left:0;right:0;bottom:0;background:var(--card);border-top:1px solid var(--bd);display:flex;padding-bottom:env(safe-area-inset-bottom,0px)}
+nav button{flex:1;background:none;border:0;padding:10px 0 8px;color:var(--mu);font:inherit;font-size:11px}
+nav button span{display:block;font-size:20px}nav button.on{color:var(--ac);font-weight:700}
+input,select{width:100%;padding:10px;border:1px solid var(--bd);border-radius:10px;background:var(--bg);color:var(--tx);font:inherit;margin-bottom:8px}
+.seg{display:flex;gap:6px;margin-bottom:12px;overflow-x:auto}.seg button{flex:none;border:1px solid var(--bd);background:var(--card);color:var(--tx);border-radius:99px;padding:7px 14px;font:inherit}
+.seg button.on{background:var(--ac);color:var(--on);border-color:var(--ac)}
+#modal{position:fixed;inset:0;background:rgba(0,0,0,.55);display:none;align-items:flex-end;justify-content:center;z-index:9}
+#modal.open{display:flex}#modal>div{background:var(--card);width:100%;max-width:640px;border-radius:18px 18px 0 0;padding:16px;max-height:85vh;overflow:auto}
+.cnt{display:flex;align-items:center;gap:6px}.cnt button{width:30px;height:30px;border-radius:8px;border:1px solid var(--bd);background:var(--bg);color:var(--tx);font-size:16px}
+.cnt b{min-width:18px;text-align:center}
+.pitch{position:relative;background:linear-gradient(#2e8b57,#27774a);border-radius:14px;aspect-ratio:3/4;border:2px solid #fff6;overflow:hidden}
+.pitch:before{content:"";position:absolute;left:0;right:0;top:50%;border-top:2px solid #fff6}
+.slot{position:absolute;transform:translate(-50%,-50%);text-align:center;width:70px;color:#fff;font-size:11px;font-weight:600;text-shadow:0 1px 2px #000a}
+.slot .av{width:44px;height:44px;margin:0 auto 2px;border:2px solid #fff;background:#0006;color:#fff}
+.jy{position:relative;width:48px;height:48px;margin:0 auto 1px}.jy img{width:100%;height:100%;object-fit:contain}
+.jy i{position:absolute;inset:0;display:grid;place-items:center;font-style:normal;font-weight:800;font-size:15px;color:#fff;-webkit-text-stroke:.5px #000}
+.tbl .pos{width:24px;font-weight:800;color:var(--mu)}.tbl .v{font-size:20px;font-weight:800;color:var(--ac)}
+.gal{display:grid;grid-template-columns:1fr 1fr;gap:10px}.gal .card{text-align:center;margin:0}.gal img{width:100%;height:110px;object-fit:contain}
+.srb{display:block;width:100%;background:var(--card);color:var(--tx);border:0;border-bottom:1px solid var(--bd);padding:11px 16px;font:inherit;text-align:left;position:sticky;top:env(safe-area-inset-top,0px);z-index:5}
+.srb b{color:var(--ac)}
+body:not(.adm) #app .btn,body:not(.adm) #app .cnt button,body:not(.adm) #app input{display:none}
+</style></head>
+<body>
+<header><div class="logo" id="hl">⚽</div><div><h1 id="ht">La Perla FC</h1><small id="sub"></small></div><button id="lg" onclick="loginM()" style="margin-left:auto;background:none;border:0;font-size:22px;display:none">🔐</button></header>
+<div id="sr"></div>
+<main id="app"></main>
+<nav id="nav"></nav>
+<div id="modal" onclick="if(event.target===this)closeM()"><div id="mbox"></div></div>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
+<script>
+const $=s=>document.querySelector(s);
+const esc=s=>String(s??"").replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+const uid=()=>Math.random().toString(36).slice(2,9);
+const POS=["POR","DEF","MED","DEL"];
+const FORM={"4-4-2":[[50,90],[15,70],[38,72],[62,72],[85,70],[15,45],[38,48],[62,48],[85,45],[38,18],[62,18]],
+"4-3-3":[[50,90],[15,70],[38,72],[62,72],[85,70],[30,48],[50,52],[70,48],[20,20],[50,15],[80,20]],
+"3-5-2":[[50,90],[25,72],[50,75],[75,72],[10,48],[30,50],[50,42],[70,50],[90,48],[38,18],[62,18]],
+"4-2-3-1":[[50,90],[15,70],[38,72],[62,72],[85,70],[35,55],[65,55],[20,35],[50,32],[80,35],[50,14]],
+"5-3-2":[[50,90],[10,68],[30,72],[50,74],[70,72],[90,68],[30,46],[50,50],[70,46],[38,18],[62,18]],
+"3-4-3":[[50,90],[25,72],[50,75],[75,72],[15,48],[38,50],[62,50],[85,48],[20,20],[50,15],[80,20]]};
+const newLineup=(n)=>({id:uid(),name:n||"Titular",formation:"4-4-2",jersey:"",slots:{}});
+const SERIES=[["primera","Primera"],["segunda","Segunda"],["tercera","Tercera"],["juvenil","Juvenil"],["infantil","Infantil"],["dorados","Dorados"],["senior","Senior"],["superseniors","Súper Seniors"]];
+const emptyS=()=>{const L=newLineup();return{players:[],matches:[],jerseys:[],lineups:[L],cur:L.id}};
+function migrate(x){
+ if(!x.series){const p={players:x.players||[],matches:x.matches||[],jerseys:x.jerseys||[],lineups:x.lineups||[],cur:x.cur};
+  if(!p.lineups.length){const L=newLineup();p.lineups=[L];p.cur=L.id}
+  x={team:x.team||{name:"La Perla",crest:""},clips:[],series:{primera:p}}}
+ x.team=x.team||{name:"La Perla",crest:""};x.clips=x.clips||[];
+ SERIES.forEach(s=>{if(!x.series[s[0]])x.series[s[0]]=emptyS()});return x}
+const D=()=>{const s=S.series;if(!s[AC])s[AC]=emptyS();return s[AC]};
+const serieName=id=>(SERIES.find(s=>s[0]==id)||[0,id])[1];
+function seed(){
+ const P=[["Mateo Ríos",1,"POR"],["Santi Vega",4,"DEF"],["Luis Parra",8,"MED"],["Diego Cano",10,"MED"],["Andrés Mora",9,"DEL"],["Kevin Soto",7,"DEL"]].map(p=>({id:uid(),name:p[0],num:p[1],pos:p[2],photo:""}));
+ const id=n=>P.find(p=>p.name.startsWith(n)).id;
+ const L=newLineup("Titular");
+ return {team:{name:"La Perla",crest:""},jerseys:[],players:P,lineups:[L],cur:L.id,matches:[
+ {id:uid(),season:"2026",rival:"Real Barrio",date:"2026-10-04",gf:3,ga:1,stats:{[id("Andrés")]:{g:2,a:0,s:0},[id("Diego")]:{g:1,a:2,s:0},[id("Mateo")]:{g:0,a:0,s:5}}},
+ {id:uid(),season:"2026",rival:"Deportivo Sur",date:"2026-10-18",gf:2,ga:2,stats:{[id("Kevin")]:{g:1,a:1,s:0},[id("Andrés")]:{g:1,a:0,s:0},[id("Luis")]:{g:0,a:1,s:0},[id("Mateo")]:{g:0,a:0,s:7}}},
+ {id:uid(),season:"2025",rival:"Los Halcones",date:"2025-11-02",gf:1,ga:0,stats:{[id("Kevin")]:{g:1,a:0,s:0},[id("Mateo")]:{g:0,a:0,s:3}}}]};
+}
+let AC="primera";try{AC=localStorage.getItem("laperla_ac")||"primera"}catch(e){}
+let S;
+try{S=JSON.parse(localStorage.getItem("laperla2")||"null");
+ if(!S){const o=JSON.parse(localStorage.getItem("laperla")||"null");if(o){const q=seed();q.players=o.players;q.matches=o.matches;S=q}}}catch(e){}
+S=migrate(S||seed());
+const SB_URL="PEGA_AQUI_TU_URL",SB_KEY="PEGA_AQUI_TU_ANON_KEY";
+let cloud="local",timer=null,ADM=false,sb=null;
+const subTxt=()=>({cloud:"☁️ Sincronizado",local:"📱 Sin conexión (solo en este dispositivo)",ro:"⚠️ No se pudo guardar"})[cloud]+(ADM&&sb?" · Admin":"");
+async function upload(b){const ext=((b.type||"").split("/")[1]||"bin").replace(/[^a-z0-9]/g,""),path=uid()+Date.now().toString(36)+"."+ext;
+ const{error}=await sb.storage.from("media").upload(path,b,{contentType:b.type});if(error)throw error;return path}
+function push(){if(!ADM||!sb)return;clearTimeout(timer);timer=setTimeout(async()=>{timer=null;const{error}=await sb.from("app_state").upsert({id:1,json:S});cloud=error?"ro":"cloud";chrome()},600)}
+function save(){if(!ADM)return;try{localStorage.setItem("laperla2",JSON.stringify(S))}catch(e){}push()}
+function up(){save();render()}
+async function pull(){if(!sb)return;
+ try{const{data,error}=await sb.from("app_state").select("json").eq("id",1).maybeSingle();if(error)throw error;cloud="cloud";
+  if(data&&data.json&&data.json.series){const r=migrate(data.json);if(JSON.stringify(r)!==JSON.stringify(S)&&!timer){S=r;try{localStorage.setItem("laperla2",JSON.stringify(S))}catch(e){}render()}}
+  else if(ADM)push()}catch(e){cloud="local"}chrome()}
+function setAdm(v){ADM=v;document.body.classList.toggle("adm",v);chrome()}
+async function initCloud(){
+ if(!window.supabase||SB_URL.startsWith("PEGA")){setAdm(true);return}
+ sb=window.supabase.createClient(SB_URL,SB_KEY);
+ const{data}=await sb.auth.getSession();setAdm(!!data.session);
+ sb.auth.onAuthStateChange((_e,s)=>{setAdm(!!s)});
+ await pull();setInterval(pull,60000);document.addEventListener("visibilitychange",()=>{if(!document.hidden)pull()})}
+function loginM(){if(!sb)return;if(ADM){if(confirm("¿Cerrar sesión de admin?"))sb.auth.signOut();return}
+ openM(`<h2>Acceso admin</h2><input id="le" type="email" placeholder="Correo"><input id="lp" type="password" placeholder="Contraseña"><p class="mu" id="lm"></p><div class="row"><button class="btn g sp" onclick="closeM()">Cancelar</button><button class="btn sp" onclick="doLogin()">Entrar</button></div>`)}
+async function doLogin(){const{error}=await sb.auth.signInWithPassword({email:$("#le").value.trim(),password:$("#lp").value});if(error)return $("#lm").textContent="Correo o contraseña incorrectos";closeM();await pull()}
+const src=v=>!v?"":v.startsWith("data:")?v:SB_URL+"/storage/v1/object/public/media/"+v;
+function fileToImg(file,o){return new Promise(res=>{const r=new FileReader();r.onload=()=>{const im=new Image();im.onload=()=>{const c=document.createElement("canvas"),x=c.getContext("2d");
+ if(o.sq){c.width=c.height=o.max;const s=Math.min(im.width,im.height);x.drawImage(im,(im.width-s)/2,(im.height-s)/2,s,s,0,0,o.max,o.max)}
+ else{const k=Math.min(1,o.max/Math.max(im.width,im.height));c.width=im.width*k;c.height=im.height*k;x.drawImage(im,0,0,c.width,c.height)}
+ const type=o.sq?"image/jpeg":"image/png";
+ c.toBlob(async b=>{if(ADM&&sb){try{return res(await upload(b))}catch(e){alert("No se pudo subir la imagen: "+(e.message||e));return res("")}}res(c.toDataURL(type,.85))},type,.85)};im.onerror=()=>{alert("No se pudo leer esa imagen, prueba con JPG o PNG");res("")};im.src=r.result};r.readAsDataURL(file)})}
+const pl=id=>D().players.find(p=>p.id==id);
+const av=p=>`<div class="av">${p&&p.photo?`<img src="${src(p.photo)}" alt="">`:esc((p?p.name:"?").split(" ").map(w=>w[0]).slice(0,2).join(""))}</div>`;
+let tab="plantel",sub={rank:"g",season:"todas",match:null,clip:"ok",cs:"todas"};
+const tabs=[["plantel","👥","Plantel"],["partidos","📅","Partidos"],["tablas","🏆","Tablas"],["formacion","📋","Formación"],["clips","🎬","Clips"],["equipo","🛡️","Equipo"]];
+function chrome(){const lg=$("#lg");if(lg){lg.style.display=sb?"":"none";lg.textContent=ADM?"🔓":"🔐"}
+ $("#sr").innerHTML=tab=="clips"?"":`<button class="srb" onclick="pickSerie()">Serie: <b>${serieName(AC)}</b> ▾</button>`;$("#nav").innerHTML=tabs.map(t=>`<button class="${tab==t[0]?"on":""}" onclick="go('${t[0]}')"><span>${t[1]}</span>${t[2]}</button>`).join("");
+ $("#sub").textContent=subTxt();$("#ht").textContent=S.team.name+" FC";$("#hl").innerHTML=S.team.crest?`<img src="${src(S.team.crest)}" alt="">`:"⚽"}
+function go(t){tab=t;sub.match=null;render()}
+function totals(pid,season){let t={g:0,a:0,s:0,pj:0};D().matches.forEach(m=>{if(season!="todas"&&m.season!=season)return;const x=m.stats[pid];if(x){t.g+=x.g||0;t.a+=x.a||0;t.s+=x.s||0;t.pj++}});return t}
+const seasons=()=>[...new Set(D().matches.map(m=>m.season))].sort().reverse();
+function openM(h){$("#mbox").innerHTML=h;$("#modal").classList.add("open")}
+function closeM(){$("#modal").classList.remove("open")}
+function render(){chrome();$("#app").innerHTML=({plantel:vPlantel,partidos:vPartidos,tablas:vTablas,formacion:vForm,clips:vClips,equipo:vEquipo})[tab]()}
+
+function vPlantel(){
+ return `<div class="row"><h2 class="sp">Plantel (${D().players.length})</h2><button class="btn" onclick="formP()">+ Jugador</button></div>`+
+ D().players.map(p=>{const t=totals(p.id,"todas");return `<div class="card row" onclick="verP('${p.id}')">${av(p)}<div class="num">${esc(p.num)}</div><div class="sp"><b>${esc(p.name)}</b><div class="mu">${p.pos}</div></div><div class="stats"><div><b>${t.g}</b><span class="mu">Goles</span></div><div><b>${t.a}</b><span class="mu">Asist.</span></div></div></div>`}).join("")+
+ `<p class="mu">Incluye datos de ejemplo en Primera. <a href="#" onclick="if(confirm('¿Borrar jugadores, partidos y formaciones de esta serie?')){const L=newLineup();D().players=[];D().matches=[];D().lineups=[L];D().cur=L.id;up()}return false">Vaciar todo</a></p>`;
+}
+let tmpPhoto="";
+function formP(id){const p=id?pl(id):null;tmpPhoto=p?p.photo:"";
+ openM(`<h2>${p?"Editar":"Nuevo"} jugador</h2><div class="row"><div class="av" id="ph">${tmpPhoto?`<img src="${src(tmpPhoto)}" alt="">`:"📷"}</div><input type="file" accept="image/*" onchange="pickPhoto(this)"></div>
+<input id="fn" placeholder="Nombre" value="${esc(p?p.name:"")}"><input id="fnum" type="number" placeholder="Número" value="${p?esc(p.num):""}"><select id="fpos">${POS.map(x=>`<option ${p&&p.pos==x?"selected":""}>${x}</option>`).join("")}</select>
+<div class="row"><button class="btn g sp" onclick="closeM()">Cancelar</button><button class="btn sp" onclick="saveP('${id||""}')">Guardar</button></div>`)}
+async function pickPhoto(i){const f=i.files[0];if(!f)return;$("#ph").textContent="…";tmpPhoto=await fileToImg(f,{sq:1,max:240});$("#ph").innerHTML=`<img src="${src(tmpPhoto)}" alt="">`}
+function saveP(id){const n=$("#fn").value.trim();if(!n)return;const d={name:n,num:$("#fnum").value||"-",pos:$("#fpos").value,photo:tmpPhoto};
+ if(id)Object.assign(pl(id),d);else D().players.push({id:uid(),...d});closeM();up()}
+function verP(id){const p=pl(id),ss=seasons();
+ openM(`<div class="row">${av(p)}<div class="sp"><h2 style="margin:0">#${esc(p.num)} ${esc(p.name)}</h2><span class="mu">${p.pos}</span></div></div><h2 style="margin-top:14px">Por temporada</h2>`+
+ (ss.map(s=>{const t=totals(id,s);return `<div class="card row"><b class="sp">${s}</b><span class="mu">${t.pj} PJ · ${t.g} goles · ${t.a} asist. · ${t.s} atajadas</span></div>`}).join("")||"<p class='mu'>Sin partidos aún</p>")+
+ `<div class="row"><button class="btn sp" onclick="formP('${id}')">Editar</button><button class="btn r sp" onclick="delP('${id}')">Eliminar</button></div>`)}
+function delP(id){if(!confirm("¿Eliminar jugador?"))return;D().players=D().players.filter(p=>p.id!=id);D().lineups.forEach(l=>{for(const k in l.slots)if(l.slots[k]==id)delete l.slots[k]});closeM();up()}
+
+function vPartidos(){
+ if(sub.match){const m=D().matches.find(x=>x.id==sub.match);return `<div class="row"><button class="btn g s" onclick="sub.match=null;render()">← Partidos</button><span class="sp"></span><button class="btn s" onclick="formM('${m.id}')">Editar marcador</button><button class="btn r s" onclick="delM('${m.id}')">Eliminar</button></div><h2 style="margin-top:12px">${esc(S.team.name)} ${m.gf} - ${m.ga} ${esc(m.rival)}</h2><p class="mu">${m.date} · Temporada ${m.season}<br>Usa + y − para anotar goles, asistencias y atajadas de cada jugador.</p>`+
+ D().players.map(p=>{const x=m.stats[p.id]||{g:0,a:0,s:0};return `<div class="card"><div class="row">${av(p)}<b class="sp">${esc(p.name)}</b></div><div class="row" style="margin-top:8px;justify-content:space-between">${[["g","Goles"],["a","Asist."],["s","Atajadas"]].map(k=>`<div><div class="mu">${k[1]}</div><div class="cnt"><button onclick="bump('${m.id}','${p.id}','${k[0]}',-1)">−</button><b>${x[k[0]]||0}</b><button onclick="bump('${m.id}','${p.id}','${k[0]}',1)">+</button></div></div>`).join("")}</div></div>`}).join("")}
+ return `<div class="row"><h2 class="sp">Partidos</h2><button class="btn" onclick="formM()">+ Partido</button></div>`+
+ (D().matches.slice().sort((a,b)=>b.date.localeCompare(a.date)).map(m=>{const r=m.gf>m.ga?"G":m.gf<m.ga?"P":"E";return `<div class="card row" onclick="sub.match='${m.id}';render()"><span class="pill">${r}</span><div class="sp"><b>${esc(S.team.name)} ${m.gf} - ${m.ga} ${esc(m.rival)}</b><div class="mu">${m.date} · ${m.season} · toca para anotar goles y asistencias</div></div>›</div>`}).join("")||"<p class='mu'>Aún no hay partidos.</p>");
+}
+function bump(mid,pid,k,d){const m=D().matches.find(x=>x.id==mid);const x=m.stats[pid]=m.stats[pid]||{g:0,a:0,s:0};x[k]=Math.max(0,(x[k]||0)+d);up()}
+function delM(id){if(!confirm("¿Eliminar partido?"))return;D().matches=D().matches.filter(m=>m.id!=id);sub.match=null;up()}
+function formM(){const t=new Date().toISOString().slice(0,10);openM(`<h2>Nuevo partido</h2><input id="mr" placeholder="Rival"><input id="md" type="date" value="${t}">
+<div class="row"><input id="mgf" type="number" min="0" placeholder="Goles ${esc(S.team.name)}"><input id="mga" type="number" min="0" placeholder="Goles rival"></div>
+<div class="row"><button class="btn g sp" onclick="closeM()">Cancelar</button><button class="btn sp" onclick="addM()">Guardar</button></div>`)}
+function addM(){const r=$("#mr").value.trim();if(!r)return;const d=$("#md").value;D().matches.push({id:uid(),season:d.slice(0,4),rival:r,date:d,gf:+$("#mgf").value||0,ga:+$("#mga").value||0,stats:{}});closeM();up()}
+
+function vTablas(){
+ const ss=seasons(),k=sub.rank,se=sub.season;
+ const ms=D().matches.filter(m=>se=="todas"||m.season==se);
+ const w=ms.filter(m=>m.gf>m.ga).length,e=ms.filter(m=>m.gf==m.ga).length,l=ms.length-w-e;
+ const rows=D().players.map(p=>({p,v:totals(p.id,se)[k]})).filter(r=>r.v>0).sort((a,b)=>b.v-a.v);
+ return `<h2>Tablas</h2><div class="seg">${["todas",...ss].map(s=>`<button class="${se==s?"on":""}" onclick="sub.season='${s}';render()">${s=="todas"?"Todas":s}</button>`).join("")}</div>
+ <div class="card row" style="justify-content:space-around;text-align:center"><div class="stats"><div><b>${ms.length}</b><span class="mu">PJ</span></div><div><b>${w}</b><span class="mu">G</span></div><div><b>${e}</b><span class="mu">E</span></div><div><b>${l}</b><span class="mu">P</span></div></div></div>
+ <div class="seg">${[["g","⚽ Goleadores"],["a","🎯 Asistencias"],["s","🧤 Atajadas"]].map(t=>`<button class="${k==t[0]?"on":""}" onclick="sub.rank='${t[0]}';render()">${t[1]}</button>`).join("")}</div>`+
+ (rows.map((r,i)=>`<div class="card row tbl"><span class="pos">${i+1}</span>${av(r.p)}<b class="sp">${esc(r.p.name)}</b><span class="v">${r.v}</span></div>`).join("")||"<p class='mu'>Sin datos para esta temporada.</p>");
+}
+
+const cur=()=>D().lineups.find(l=>l.id==D().cur)||D().lineups[0];
+function vForm(){
+ const L=cur(),F=FORM[L.formation],J=D().jerseys.find(j=>j.id==L.jersey);
+ const used=Object.values(L.slots),bench=D().players.filter(p=>!used.includes(p.id));
+ return `<h2>Formación</h2>
+ <select onchange="D().cur=this.value;up()">${D().lineups.map(l=>`<option value="${l.id}" ${l.id==L.id?"selected":""}>${esc(l.name)} (${l.formation})</option>`).join("")}</select>
+ <input value="${esc(L.name)}" placeholder="Nombre de la alineación" onchange="cur().name=this.value||'Sin nombre';up()">
+ <div class="row" style="margin-bottom:10px"><button class="btn s sp" onclick="const n=newLineup('Alineación '+(D().lineups.length+1));D().lineups.push(n);D().cur=n.id;up()">+ Nueva</button><button class="btn g s sp" onclick="const c=JSON.parse(JSON.stringify(cur()));c.id=uid();c.name+=' (copia)';D().lineups.push(c);D().cur=c.id;up()">Duplicar</button><button class="btn r s sp" onclick="delL()">Eliminar</button></div>
+ <div class="seg">${Object.keys(FORM).map(f=>`<button class="${L.formation==f?"on":""}" onclick="cur().formation='${f}';up()">${f}</button>`).join("")}</div>
+ <div class="seg"><button class="${!J?"on":""}" onclick="cur().jersey='';up()">Sin camiseta</button>${D().jerseys.map(j=>`<button class="${L.jersey==j.id?"on":""}" onclick="cur().jersey='${j.id}';up()">👕 ${esc(j.label)}</button>`).join("")}</div>
+ <div class="pitch">${F.map((c,i)=>{const p=pl(L.slots[i]);
+  const ic=!p?`<div class="av">+</div>`:J?`<div class="jy"><img src="${src(J.img)}" alt=""><i>${esc(p.num)}</i></div>`:av(p);
+  return `<div class="slot" style="left:${c[0]}%;top:${c[1]}%" onclick="pickSlot(${i})">${ic}${p?esc(p.name.split(" ")[0]):""}</div>`}).join("")}</div>
+ <p class="mu">Toca una posición para asignar un jugador.</p>
+ <h2>Suplentes</h2><div>${bench.map(p=>`<span class="pill" style="margin:0 4px 6px 0">${esc(p.num)} ${esc(p.name)}</span>`).join("")||"<span class='mu'>Todos asignados</span>"}</div>`;
+}
+function delL(){if(D().lineups.length<2)return alert("Debe quedar al menos una alineación");if(!confirm("¿Eliminar esta alineación?"))return;D().lineups=D().lineups.filter(l=>l.id!=D().cur);D().cur=D().lineups[0].id;up()}
+function pickSlot(i){openM(`<h2>Elegir jugador</h2>`+D().players.map(p=>`<div class="card row" onclick="setSlot(${i},'${p.id}')">${av(p)}<b class="sp">${esc(p.name)}</b><span class="mu">${p.pos}</span></div>`).join("")+`<button class="btn g" onclick="setSlot(${i},'')">Dejar vacío</button>`)}
+function setSlot(i,id){const L=cur();if(id){for(const k in L.slots)if(L.slots[k]==id)delete L.slots[k];L.slots[i]=id}else delete L.slots[i];closeM();up()}
+
+function vEquipo(){
+ return `<h2>Equipo</h2>
+ <div class="card"><div class="row"><div class="logo" style="width:64px;height:64px">${S.team.crest?`<img src="${src(S.team.crest)}" alt="">`:"⚽"}</div><div class="sp"><b>Escudo</b><input type="file" accept="image/*" onchange="setCrest(this)" style="margin:6px 0 0"></div></div>
+ <input style="margin-top:10px" value="${esc(S.team.name)}" onchange="S.team.name=this.value.trim()||'La Perla';up()"></div>
+ <div class="row"><h2 class="sp">Camisetas · ${serieName(AC)}</h2><button class="btn s" onclick="formJ()">+ Camiseta</button></div>
+ ${D().jerseys.length?`<div class="gal">${D().jerseys.map(j=>`<div class="card"><img src="${src(j.img)}" alt=""><b>${esc(j.label)}</b><div><button class="btn r s" onclick="delJ('${j.id}')">Quitar</button></div></div>`).join("")}</div>`:"<p class='mu'>Aún no hay camisetas. Sube las imágenes de tus camisetas (local, visita, portero…) y úsalas en las formaciones.</p>"}
+ <h2 style="margin-top:18px">Datos</h2><div class="card mu">${subTxt()}.${cloud=="cloud"&&!ADM?" Estás en modo lectura. Toca 🔐 arriba para entrar como admin.":""}</div>`;
+}
+async function setCrest(i){const f=i.files[0];if(!f)return;S.team.crest=await fileToImg(f,{max:300});up()}
+let tmpJ="";
+function formJ(){tmpJ="";openM(`<h2>Nueva camiseta</h2><div class="row"><div class="av" id="ph">👕</div><input type="file" accept="image/*" onchange="pickJ(this)"></div><input id="jl" placeholder="Nombre (ej. Local, Visita, Portero)">
+<div class="row"><button class="btn g sp" onclick="closeM()">Cancelar</button><button class="btn sp" onclick="addJ()">Guardar</button></div>`)}
+async function pickJ(i){const f=i.files[0];if(!f)return;$("#ph").textContent="…";tmpJ=await fileToImg(f,{max:400});$("#ph").innerHTML=`<img src="${src(tmpJ)}" alt="" style="object-fit:contain">`}
+function addJ(){if(!tmpJ)return;D().jerseys.push({id:uid(),label:$("#jl").value.trim()||"Camiseta",img:tmpJ});closeM();up()}
+function delJ(id){if(!confirm("¿Quitar camiseta?"))return;D().jerseys=D().jerseys.filter(j=>j.id!=id);D().lineups.forEach(l=>{if(l.jersey==id)l.jersey=""});up()}
+
+function pickSerie(){openM(`<h2>Elegir serie</h2>`+SERIES.map(s=>{const d=S.series[s[0]]||emptyS();return `<div class="card row" onclick="setSerie('${s[0]}')"><b class="sp">${s[1]}${s[0]==AC?" ✓":""}</b><span class="mu">${d.players.length} jug. · ${d.matches.length} part.</span></div>`}).join(""))}
+function setSerie(id){AC=id;try{localStorage.setItem("laperla_ac",id)}catch(e){}sub.match=null;closeM();render()}
+function vClips(){
+ const cs=sub.cs,list=S.clips.filter(c=>cs=="todas"||c.serie==cs),ok=list.filter(c=>c.status=="aprobado"),pe=list.filter(c=>c.status=="pendiente"),show=sub.clip=="ok"?ok:pe;
+ return `<div class="row"><h2 class="sp">Clips de goles</h2><button class="btn" onclick="formC()">+ Subir clip</button></div>
+ <select onchange="sub.cs=this.value;render()"><option value="todas">Todas las series</option>${SERIES.map(s=>`<option value="${s[0]}" ${cs==s[0]?"selected":""}>${s[1]}</option>`).join("")}</select>
+ <div class="seg"><button class="${sub.clip=="ok"?"on":""}" onclick="sub.clip='ok';render()">Aprobados (${ok.length})</button><button class="${sub.clip=="pe"?"on":""}" onclick="sub.clip='pe';render()">Pendientes (${pe.length})</button></div>`+
+ (show.map(c=>`<div class="card"><video controls playsinline preload="metadata" src="${src(c.vid)}" style="width:100%;border-radius:10px;background:#000"></video><b>${esc(c.title)}</b><div class="mu">${serieName(c.serie)}${c.player?" · "+esc(c.player):""} · ${c.date}</div><div class="row" style="margin-top:6px">${c.status=="pendiente"?`<button class="btn s sp" onclick="setC('${c.id}','aprobado')">Aprobar</button><button class="btn r s sp" onclick="delC('${c.id}')">Rechazar</button>`:`<button class="btn r s" onclick="delC('${c.id}')">Eliminar</button>`}</div></div>`).join("")||"<p class='mu'>No hay clips aquí todavía.</p>")+
+ `<p class="mu">Próximamente: cualquier persona podrá enviar clips y llegarán a “Pendientes” para que tú los apruebes.</p>`}
+let tmpV=null;
+function formC(){tmpV=null;openM(`<h2>Subir clip</h2><input type="file" accept="video/*" onchange="tmpV=this.files[0]"><input id="ct" placeholder="Título (ej. Golazo de Mora)"><select id="cs">${SERIES.map(s=>`<option value="${s[0]}" ${s[0]==AC?"selected":""}>${s[1]}</option>`).join("")}</select><input id="cp" placeholder="Jugador (opcional)"><label class="mu"><input type="checkbox" id="cd" checked style="width:auto;margin-right:6px">Publicar directo (soy admin)</label><p class="mu" id="cm"></p><div class="row"><button class="btn g sp" onclick="closeM()">Cancelar</button><button class="btn sp" id="cb" onclick="addC()">Subir</button></div>`)}
+async function addC(){const f=tmpV,m=$("#cm");if(!f)return m.textContent="Elige un video";if(!ADM||!sb)return m.textContent="Subir videos necesita la nube y entrar como admin (🔐).";if(f.size>20*1024*1024)return m.textContent="El video pesa más de 20 MB; recórtalo.";
+ $("#cb").disabled=true;m.textContent="Subiendo…";
+ try{const u={id:await upload(f)};S.clips.unshift({id:uid(),vid:u.id,title:$("#ct").value.trim()||"Clip",serie:$("#cs").value,player:$("#cp").value.trim(),status:$("#cd").checked?"aprobado":"pendiente",date:new Date().toISOString().slice(0,10)});closeM();up()}catch(e){m.textContent="No se pudo subir el video";$("#cb").disabled=false}}
+function setC(id,s){S.clips.find(c=>c.id==id).status=s;up()}
+function delC(id){if(!confirm("¿Eliminar clip?"))return;S.clips=S.clips.filter(c=>c.id!=id);up()}
+function formM(id){const m=id?D().matches.find(x=>x.id==id):null,t=m?m.date:new Date().toISOString().slice(0,10);
+ openM(`<h2>${m?"Editar":"Nuevo"} partido</h2><input id="mr" placeholder="Rival" value="${esc(m?m.rival:"")}"><input id="md" type="date" value="${t}"><div class="row"><input id="mgf" type="number" min="0" placeholder="Goles ${esc(S.team.name)}" value="${m?m.gf:""}"><input id="mga" type="number" min="0" placeholder="Goles rival" value="${m?m.ga:""}"></div><div class="row"><button class="btn g sp" onclick="closeM()">Cancelar</button><button class="btn sp" onclick="addM('${id||""}')">Guardar</button></div>`)}
+function addM(id){const r=$("#mr").value.trim();if(!r)return;const d=$("#md").value,v={season:d.slice(0,4),rival:r,date:d,gf:+$("#mgf").value||0,ga:+$("#mga").value||0};
+ if(id)Object.assign(D().matches.find(x=>x.id==id),v);else D().matches.push({id:uid(),...v,stats:{}});closeM();up()}
+render();initCloud();
+if("serviceWorker"in navigator)navigator.serviceWorker.register("sw.js").catch(()=>{});
+</script></body></html>
