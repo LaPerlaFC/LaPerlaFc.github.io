@@ -54,6 +54,7 @@ body:not(.adm) #app .btn,body:not(.adm) #app .cnt button,body:not(.adm) #app inp
 <nav id="nav"></nav>
 <div id="modal" onclick="if(event.target===this)closeM()"><div id="mbox"></div></div>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
+<script src="config.js"></script>
 <script>
 const $=s=>document.querySelector(s);
 const esc=s=>String(s??"").replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
@@ -90,7 +91,7 @@ let S;
 try{S=JSON.parse(localStorage.getItem("laperla2")||"null");
  if(!S){const o=JSON.parse(localStorage.getItem("laperla")||"null");if(o){const q=seed();q.players=o.players;q.matches=o.matches;S=q}}}catch(e){}
 S=migrate(S||seed());
-const SB_URL="PEGA_AQUI_TU_URL",SB_KEY="PEGA_AQUI_TU_ANON_KEY";
+const SB_URL=window.LP_URL||"PEGA_AQUI_TU_URL",SB_KEY=window.LP_KEY||"PEGA_AQUI_TU_ANON_KEY";
 let cloud="local",timer=null,ADM=false,sb=null;
 const subTxt=()=>({cloud:"☁️ Sincronizado",local:"📱 Sin conexión (solo en este dispositivo)",ro:"⚠️ No se pudo guardar"})[cloud]+(ADM&&sb?" · Admin":"");
 async function upload(b){const ext=((b.type||"").split("/")[1]||"bin").replace(/[^a-z0-9]/g,""),path=uid()+Date.now().toString(36)+"."+ext;
