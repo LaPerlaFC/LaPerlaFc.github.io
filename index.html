@@ -133,7 +133,7 @@ let tab=(()=>{try{return localStorage.getItem("laperla_tab")||"plantel"}catch(e)
 const tabs=[["fiados","🧾","Fiados"],["plantel","👥","Plantel"],["partidos","📅","Partidos"],["tablas","🏆","Tablas"],["formacion","📋","Formación"],["clips","🎬","Clips"],["equipo","🛡️","Equipo"]];
 function chrome(){const lg=$("#lg");if(lg){lg.style.display=sb?"":"none";lg.textContent=ADM?"🔓":"🔐"}
  $("#sr").innerHTML=tab=="clips"||tab=="fiados"?"":`<button class="srb" onclick="pickSerie()">Serie: <b>${serieName(AC)}</b> ▾</button>`;$("#nav").innerHTML=tabs.filter(t=>t[0]!="fiados"||ADM).map(t=>`<button class="${tab==t[0]?"on":""}" onclick="go('${t[0]}')"><span>${t[1]}</span>${t[2]}</button>`).join("");
- $("#sub").textContent=subTxt();$("#ht").textContent=S.team.name+" FC";$("#hl").innerHTML=S.team.crest?`<img src="${src(S.team.crest)}" alt="">`:"⚽"}
+ $("#sub").textContent=subTxt()+" · v5";$("#ht").textContent=S.team.name+" FC";$("#hl").innerHTML=S.team.crest?`<img src="${src(S.team.crest)}" alt="">`:"⚽"}
 function go(t){tab=t;sub.match=null;try{localStorage.setItem("laperla_tab",t)}catch(e){}render()}
 function totals(pid,season){let t={g:0,a:0,s:0,pj:0};D().matches.forEach(m=>{if(season!="todas"&&m.season!=season)return;const x=m.stats[pid];if(x){t.g+=x.g||0;t.a+=x.a||0;t.s+=x.s||0;t.pj++}});return t}
 const seasons=()=>[...new Set(D().matches.map(m=>m.season))].sort().reverse();
