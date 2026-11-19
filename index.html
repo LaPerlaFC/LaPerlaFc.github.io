@@ -99,22 +99,24 @@ S=migrate(S||(window.LP_URL?{}:seed()));
 const SB_URL=window.LP_URL||"PEGA_AQUI_TU_URL",SB_KEY=window.LP_KEY||"PEGA_AQUI_TU_ANON_KEY";
 const lsGet=k=>{try{return localStorage.getItem(k)}catch(e){return null}},lsSet=(k,v)=>{try{localStorage.setItem(k,v)}catch(e){}},lsDel=k=>{try{localStorage.removeItem(k)}catch(e){}};
 const isOff=e=>!navigator.onLine||/fetch|network|load failed/i.test((e&&e.message)||String(e||""));
-let cloud="local",timer=null,ADM=false,sb=null,lastErr="",dirtyS=lsGet("lp_ds")=="1",dirtyF=lsGet("lp_df")=="1",pulledOnce=false,freshS=!lsGet("laperla2"),migrating=false;
+let cloud="local",timer=null,ADM=false,sb=null,lastErr="",dirtyS=lsGet("lp_ds")=="1",dirtyF=lsGet("lp_df")=="1",pulledOnce=false,lastTsS=null,lastTsF=null,freshS=!lsGet("laperla2"),migrating=false;
 const pend=()=>dirtyS||dirtyF;
 const subTxt=()=>(!sb?"📱 Solo en este dispositivo":cloud=="ro"?"⚠️ Error de nube"+(lastErr?": "+lastErr:""):!navigator.onLine?"📴 Sin internet":cloud=="local"?"📱 Sin conexión"+(lastErr?": "+lastErr:""):"☁️ Sincronizado")+(pend()&&sb?" · ⏳ pendiente de subir":"")+(ADM&&sb?" · Admin":"");
 async function upload(b){const ext=((b.type||"").split("/")[1]||"bin").replace(/[^a-z0-9]/g,""),path=uid()+Date.now().toString(36)+"."+ext;
  const{error}=await sb.storage.from("media").upload(path,b,{contentType:b.type});if(error)throw error;return path}
 const nerr=e=>{if(isOff(e))cloud="local";else{cloud="ro";lastErr=(e&&e.message)||String(e)}};
+async function stamp(tb){const{data,error}=await sb.from(tb).select("updated_at").eq("id",1).maybeSingle();if(error)throw error;return data?data.updated_at:null}
 async function doPushS(){timer=null;if(!sb||!ADM)return;if(!navigator.onLine||(freshS&&!pulledOnce)){chrome();return}
- try{const{error}=await sb.from("app_state").upsert({id:1,json:S});if(error)throw error;cloud="cloud";lastErr="";dirtyS=false;lsDel("lp_ds")}catch(e){nerr(e)}chrome()}
+ try{const r=await sb.from("app_state").upsert({id:1,json:S,updated_at:new Date().toISOString()}).select("updated_at");if(r.error)throw r.error;lastTsS=r.data&&r.data[0]?r.data[0].updated_at:null;cloud="cloud";lastErr="";dirtyS=false;lsDel("lp_ds")}catch(e){nerr(e)}chrome()}
 function push(){if(!ADM||!sb)return;clearTimeout(timer);timer=setTimeout(doPushS,600)}
 function save(){if(!ADM)return;lsSet("laperla2",JSON.stringify(S));dirtyS=true;lsSet("lp_ds","1");push()}
 function up(){save();render()}
 async function pullS(){
- try{const{data,error}=await sb.from("app_state").select("json").eq("id",1).maybeSingle();if(error)throw error;cloud="cloud";lastErr="";
+ try{const ts=await stamp("app_state");if(ts&&ts===lastTsS&&pulledOnce){cloud="cloud";lastErr="";return}
+  const{data,error}=await sb.from("app_state").select("json,updated_at").eq("id",1).maybeSingle();if(error)throw error;cloud="cloud";lastErr="";
   if(data&&data.json&&data.json.series){
-   if(freshS&&!pulledOnce){dirtyS=false;lsDel("lp_ds");S=migrate(data.json);lsSet("laperla2",JSON.stringify(S));render()}
-   else if(!timer&&!dirtyS){const r=migrate(data.json);if(JSON.stringify(r)!==JSON.stringify(S)){S=r;lsSet("laperla2",JSON.stringify(S));render()}}
+   if(freshS&&!pulledOnce){lastTsS=data.updated_at;dirtyS=false;lsDel("lp_ds");S=migrate(data.json);lsSet("laperla2",JSON.stringify(S));render()}
+   else if(!timer&&!dirtyS){lastTsS=data.updated_at;const r=migrate(data.json);if(JSON.stringify(r)!==JSON.stringify(S)){S=r;lsSet("laperla2",JSON.stringify(S));render()}}
   }else if(ADM){dirtyS=true;lsSet("lp_ds","1");push()}
   pulledOnce=true}catch(e){nerr(e)}}
 async function migrateImages(){if(migrating||!sb||!ADM||!navigator.onLine)return;migrating=true;
@@ -157,7 +159,7 @@ let tab=(()=>{try{return localStorage.getItem("laperla_tab")||"plantel"}catch(e)
 const tabs=[["fiados","🧾","Fiados"],["plantel","👥","Plantel"],["partidos","📅","Partidos"],["tablas","🏆","Tablas"],["formacion","📋","Formación"],["clips","🎬","Clips"],["equipo","🛡️","Equipo"]];
 function chrome(){const lg=$("#lg");if(lg){lg.style.display=sb?"":"none";lg.textContent=ADM?"🔓":"🔐"}
  $("#sr").innerHTML=tab=="clips"||tab=="fiados"?"":`<button class="srb" onclick="pickSerie()">Serie: <b>${serieName(AC)}</b> ▾</button>`;$("#nav").innerHTML=tabs.filter(t=>t[0]!="fiados"||ADM).map(t=>`<button class="${tab==t[0]?"on":""}" onclick="go('${t[0]}')"><span>${t[1]}</span>${t[2]}</button>`).join("");
- $("#sub").textContent=subTxt()+" · v6";$("#ht").textContent=S.team.name+" FC";$("#hl").innerHTML=S.team.crest?`<img src="${src(S.team.crest)}" alt="">`:"⚽"}
+ $("#sub").textContent=subTxt()+" · v7";$("#ht").textContent=S.team.name+" FC";$("#hl").innerHTML=S.team.crest?`<img src="${src(S.team.crest)}" alt="">`:"⚽"}
 function go(t){tab=t;sub.match=null;try{localStorage.setItem("laperla_tab",t)}catch(e){}render()}
 function totals(pid,season){let t={g:0,a:0,s:0,pj:0};D().matches.forEach(m=>{if(season!="todas"&&m.season!=season)return;const x=m.stats[pid];if(x){t.g+=x.g||0;t.a+=x.a||0;t.s+=x.s||0;t.pj++}});return t}
 const seasons=()=>[...new Set(D().matches.map(m=>m.season))].sort().reverse();
@@ -234,7 +236,7 @@ function vEquipo(){
  <input style="margin-top:10px" value="${esc(S.team.name)}" onchange="S.team.name=this.value.trim()||'La Perla';up()"></div>
  <div class="row"><h2 class="sp">Camisetas · ${serieName(AC)}</h2><button class="btn s" onclick="formJ()">+ Camiseta</button></div>
  ${D().jerseys.length?`<div class="gal">${D().jerseys.map(j=>`<div class="card"><img src="${src(j.img)}" alt=""><b>${esc(j.label)}</b><div><button class="btn r s" onclick="delJ('${j.id}')">Quitar</button></div></div>`).join("")}</div>`:"<p class='mu'>Aún no hay camisetas. Sube las imágenes de tus camisetas (local, visita, portero…) y úsalas en las formaciones.</p>"}
- <h2 style="margin-top:18px">Datos</h2><div class="card mu">${subTxt()}.${cloud=="cloud"&&!ADM?" Estás en modo lectura. Toca 🔐 arriba para entrar como admin.":""}</div>`;
+ ${ADM?`<h2 style="margin-top:18px">Cuidado de los datos (Fiados)</h2><div class="card"><p class="mu">Solo para ti. Piden escribir una palabra para confirmar.</p><div class="row"><button class="btn g s sp" onclick="wipeLog()">Borrar historial</button><button class="btn r s sp" onclick="wipeAll()">Borrar todos los fiados</button></div></div>`:""}<h2 style="margin-top:18px">Datos</h2><div class="card mu">${subTxt()}.${cloud=="cloud"&&!ADM?" Estás en modo lectura. Toca 🔐 arriba para entrar como admin.":""}</div>`;
 }
 async function setCrest(i){const f=i.files[0];if(!f)return;S.team.crest=await fileToImg(f,{max:300});up()}
 let tmpJ="";
@@ -280,24 +282,31 @@ function fsave(){if(!ADM)return;lsSet("laperla_f",JSON.stringify(F));dirtyF=true
 function pushF(){if(!ADM||!sb)return;clearTimeout(timerF);timerF=setTimeout(doPushF,500)}
 const refreshF=()=>{if(tab!="fiados")return;if(sub.f=="fiar")fBody();else if(!$("#modal").classList.contains("open"))render()};
 function mergeF(a,b){
+ const ea=a.epoch||0,eb=b.epoch||0;if(ea>eb)return a;if(eb>ea)return b;
  const rp=new Map(b.people.map(p=>[nrm(p.name),p.id])),ids=new Set(b.people.map(p=>p.id)),remap={};
  a.people.forEach(p=>{if(!ids.has(p.id)){const r=rp.get(nrm(p.name));if(r)remap[p.id]=r}});
  const fix=o=>remap[o.person]?{...o,person:remap[o.person]}:o;
  const U=(x,y,f)=>{const m=new Map();[...x,...y].forEach(o=>{const p=m.get(o.id);m.set(o.id,p?f(p,o):o)});return[...m.values()]};
  const byDate=(p,q)=>(p.date||"")<(q.date||"")?-1:1;
- return{products:U(b.products,a.products,(p,o)=>o),people:U(b.people,a.people.filter(p=>!remap[p.id]),(p,o)=>o),
+ return{epoch:ea,products:U(b.products,a.products,(p,o)=>o),people:U(b.people,a.people.filter(p=>!remap[p.id]),(p,o)=>o),
   entries:U(b.entries,a.entries.map(fix),(p,o)=>({...o,qty:Math.max(p.qty,o.qty),paid:Math.max(p.paid,o.paid)})).sort(byDate),
   log:U(b.log,a.log.map(fix),(p,o)=>o).sort(byDate)}}
 async function doPushF(){timerF=null;if(!sb||!ADM)return;if(!navigator.onLine){fst();return}
- try{const r=await sb.from("fiados").select("json").eq("id",1).maybeSingle();if(r.error)throw r.error;
-  if(r.data&&r.data.json&&r.data.json.products){F=mergeF(F,r.data.json);lsSet("laperla_f",JSON.stringify(F))}
-  const w=await sb.from("fiados").upsert({id:1,json:F});if(w.error)throw w.error;fErr="";dirtyF=false;lsDel("lp_df");refreshF()}
+ try{const ts=await stamp("fiados");
+  if(ts&&ts!==lastTsF){const r=await sb.from("fiados").select("json").eq("id",1).maybeSingle();if(r.error)throw r.error;
+   if(r.data&&r.data.json&&r.data.json.products){F=mergeF(F,r.data.json);lsSet("laperla_f",JSON.stringify(F))}}
+  const w=await sb.from("fiados").upsert({id:1,json:F,updated_at:new Date().toISOString()}).select("updated_at");if(w.error)throw w.error;
+  lastTsF=w.data&&w.data[0]?w.data[0].updated_at:null;fErr="";dirtyF=false;lsDel("lp_df");refreshF()}
  catch(e){fErr=isOff(e)?"":((e&&e.message)||String(e))}fst()}
 async function syncF(){if(!sb||!ADM||!navigator.onLine)return;
  if(dirtyF){await doPushF();return}
- try{const{data,error}=await sb.from("fiados").select("json").eq("id",1).maybeSingle();if(error)throw error;fErr="";
-  if(data&&data.json&&data.json.products){if(!timerF&&JSON.stringify(data.json)!==JSON.stringify(F)){F=data.json;lsSet("laperla_f",JSON.stringify(F));refreshF()}}
+ try{const ts=await stamp("fiados");if(ts&&ts===lastTsF){fErr="";fst();return}
+  const{data,error}=await sb.from("fiados").select("json,updated_at").eq("id",1).maybeSingle();if(error)throw error;fErr="";
+  if(data&&data.json&&data.json.products){if(!timerF){lastTsF=data.updated_at;if(JSON.stringify(data.json)!==JSON.stringify(F)){F=data.json;lsSet("laperla_f",JSON.stringify(F));refreshF()}}}
   else{if(!F.products.length)F=emptyF();dirtyF=true;lsSet("lp_df","1");pushF()}}catch(e){fErr=isOff(e)?"":((e&&e.message)||String(e))}fst()}
+function wipeOk(){if(sb&&(!navigator.onLine||dirtyF)){alert("Para borrar, conéctate a internet y espera a que diga ☁️ Guardado.");return false}return true}
+function wipeLog(){if(!wipeOk())return;if(prompt("Esto borra TODO el historial de movimientos. Las deudas se mantienen.\nPara confirmar escribe: BORRAR")!=="BORRAR")return;F.log=[];F.epoch=(F.epoch||0)+1;fsave();render();alert("Historial borrado")}
+function wipeAll(){if(!wipeOk())return;if(prompt("Esto borra TODOS los fiados, clientes e historial. Los productos se mantienen.\nPara confirmar escribe: BORRAR TODO")!=="BORRAR TODO")return;F.entries=[];F.people=[];F.log=[];F.epoch=(F.epoch||0)+1;fsave();render();alert("Listo: Fiados quedó en cero")}
 const pimg=p=>`<div class="pimg">${p.img?`<img src="${src(p.img)}" alt="">`:emojiFor(p.name)}</div>`;
 function vFiados(){
  const v=sub.f,T=[["fiar","➕ Fiar"],["res","📊 Resumen"],["deu","👥 Deudores"],["pro","🏷️ Productos"]];
@@ -342,7 +351,7 @@ const fd=d=>new Date(d).toLocaleDateString("es-CL",{day:"2-digit",month:"2-digit
 function verD(pid){const p=F.people.find(x=>x.id==pid),es=F.entries.filter(e=>e.person==pid&&e.qty>e.paid),lg=F.log.filter(l=>l.person==pid).slice(-25).reverse();
  openM(`<h2>${esc(p.name)}</h2><div class="debt">Debe: ${money(owedP(pid))}</div><h2 style="font-size:15px">Lo que debe</h2>`+
  (grp(es).map(g=>`<div class="card row"><span class="sp">${esc(g.pname)} ×${g.u}<div class="mu">a ${money(g.price)} c/u · desde ${fd(g.date)}</div></span><b>${money(g.u*g.price)}</b><button class="btn g s" onclick="fPay('${g.id}','d')">Pagó 1</button></div>`).join("")||"<p class='mu'>Sin deuda.</p>")+
- `<h2 style="font-size:15px">Historial</h2>`+lg.map(l=>`<div class="mu">${fd(l.date)} · ${l.d>0?"fió":"pagó"} ${esc(l.pname)} ${l.d>0?"+":"−"}${Math.abs(l.d)} (${money(l.price)})</div>`).join("")+
+ `<details style="margin-top:8px"><summary class="mu" style="cursor:pointer">Ver historial (${lg.length})</summary>`+lg.map(l=>`<div class="mu">${fd(l.date)} · ${l.d>0?"fió":"pagó"} ${esc(l.pname)} ${l.d>0?"+":"−"}${Math.abs(l.d)} (${money(l.price)})</div>`).join("")+"</details>"+
  `<div class="row" style="margin-top:12px"><button class="btn sp" onclick="payAll('${pid}')">Pagó todo</button><button class="btn g sp" onclick="closeM()">Cerrar</button></div>`)}
 function payAll(pid){if(!confirm("¿Marcar toda la deuda como pagada?"))return;const now=new Date().toISOString();
  F.entries.filter(e=>e.person==pid&&e.qty>e.paid).forEach(e=>{F.log.push({id:uid(),date:now,person:pid,pname:e.pname,price:e.price,d:-(e.qty-e.paid)});e.paid=e.qty});fsave();closeM();render()}
