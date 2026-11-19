@@ -279,8 +279,12 @@ function fPlus(id){const n=curName.trim();if(!n){$("#fname").focus();alert("Escr
  if(e)e.qty++;else F.entries.push({id:uid(),person:p.id,prod:id,pname:pr.name,price:pr.price,qty:1,paid:0,date:now});
  F.log.push({id:uid(),date:now,person:p.id,pname:pr.name,price:pr.price,d:1});if(F.log.length>1500)F.log=F.log.slice(-1500);
  fsave();fBody()}
-function fMinus(id){const p=fPerson(curName);if(!p)return;const e=F.entries.find(x=>x.person==p.id&&x.prod==id&&x.qty>x.paid);if(!e)return;e.paid++;
- F.log.push({id:uid(),date:new Date().toISOString(),person:p.id,pname:e.pname,price:e.price,d:-1});fsave();fBody()}
+function fPay(eid,from){const e=F.entries.find(x=>x.id==eid);if(!e||e.qty<=e.paid)return;e.paid++;
+ F.log.push({id:uid(),date:new Date().toISOString(),person:e.person,pname:e.pname,price:e.price,d:-1});fsave();
+ if(from=="d"){verD(e.person);render()}else{closeM();fBody()}}
+function fMinus(id){const p=fPerson(curName);if(!p)return;const es=F.entries.filter(x=>x.person==p.id&&x.prod==id&&x.qty>x.paid);if(!es.length)return;
+ if(new Set(es.map(e=>e.price)).size>1){openM(`<h2>¿Cuál pagó?</h2><p class="mu">${esc(p.name)} tiene ${esc(es[0].pname)} fiado a distintos precios:</p>`+es.map(e=>`<button class="btn" style="width:100%;margin-bottom:10px;font-size:18px;padding:16px" onclick="fPay('${e.id}','f')">${money(e.price)} (quedan ${e.qty-e.paid}) · ${fd(e.date)}</button>`).join("")+`<button class="btn g" style="width:100%" onclick="closeM()">Cancelar</button>`);return}
+ fPay(es[0].id,"f")}
 function vRes(){
  const rows=F.products.map(pr=>{const es=F.entries.filter(e=>e.prod==pr.id&&e.qty>e.paid);const by={};
   es.forEach(e=>{by[e.person]=(by[e.person]||0)+e.qty-e.paid});
@@ -296,7 +300,7 @@ function vDeu(){const L=F.people.map(p=>owedP(p.id)).filter(o=>o>0);
 const fd=d=>new Date(d).toLocaleDateString("es-CL",{day:"2-digit",month:"2-digit"});
 function verD(pid){const p=F.people.find(x=>x.id==pid),es=F.entries.filter(e=>e.person==pid&&e.qty>e.paid),lg=F.log.filter(l=>l.person==pid).slice(-25).reverse();
  openM(`<h2>${esc(p.name)}</h2><div class="debt">Debe: ${money(owedP(pid))}</div><h2 style="font-size:15px">Lo que debe</h2>`+
- (es.map(e=>`<div class="card row"><span class="sp">${esc(e.pname)} ×${e.qty-e.paid}<div class="mu">a ${money(e.price)} c/u · desde ${fd(e.date)}</div></span><b>${money((e.qty-e.paid)*e.price)}</b></div>`).join("")||"<p class='mu'>Sin deuda.</p>")+
+ (es.map(e=>`<div class="card row"><span class="sp">${esc(e.pname)} ×${e.qty-e.paid}<div class="mu">a ${money(e.price)} c/u · desde ${fd(e.date)}</div></span><b>${money((e.qty-e.paid)*e.price)}</b><button class="btn g s" onclick="fPay('${e.id}','d')">Pagó 1</button></div>`).join("")||"<p class='mu'>Sin deuda.</p>")+
  `<h2 style="font-size:15px">Historial</h2>`+lg.map(l=>`<div class="mu">${fd(l.date)} · ${l.d>0?"fió":"pagó"} ${esc(l.pname)} ${l.d>0?"+":"−"}${Math.abs(l.d)} (${money(l.price)})</div>`).join("")+
  `<div class="row" style="margin-top:12px"><button class="btn sp" onclick="payAll('${pid}')">Pagó todo</button><button class="btn g sp" onclick="closeM()">Cerrar</button></div>`)}
 function payAll(pid){if(!confirm("¿Marcar toda la deuda como pagada?"))return;const now=new Date().toISOString();
