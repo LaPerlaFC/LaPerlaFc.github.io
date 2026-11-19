@@ -95,45 +95,69 @@ let AC="primera";try{AC=localStorage.getItem("laperla_ac")||"primera"}catch(e){}
 let S;
 try{S=JSON.parse(localStorage.getItem("laperla2")||"null");
  if(!S){const o=JSON.parse(localStorage.getItem("laperla")||"null");if(o){const q=seed();q.players=o.players;q.matches=o.matches;S=q}}}catch(e){}
-S=migrate(S||seed());
+S=migrate(S||(window.LP_URL?{}:seed()));
 const SB_URL=window.LP_URL||"PEGA_AQUI_TU_URL",SB_KEY=window.LP_KEY||"PEGA_AQUI_TU_ANON_KEY";
-let cloud="local",timer=null,ADM=false,sb=null,lastErr="";
-const subTxt=()=>({cloud:"☁️ Sincronizado",local:"📱 Sin conexión"+(lastErr?": "+lastErr:" (solo en este dispositivo)"),ro:"⚠️ No se pudo guardar"})[cloud]+(ADM&&sb?" · Admin":"");
+const lsGet=k=>{try{return localStorage.getItem(k)}catch(e){return null}},lsSet=(k,v)=>{try{localStorage.setItem(k,v)}catch(e){}},lsDel=k=>{try{localStorage.removeItem(k)}catch(e){}};
+const isOff=e=>!navigator.onLine||/fetch|network|load failed/i.test((e&&e.message)||String(e||""));
+let cloud="local",timer=null,ADM=false,sb=null,lastErr="",dirtyS=lsGet("lp_ds")=="1",dirtyF=lsGet("lp_df")=="1",pulledOnce=false,freshS=!lsGet("laperla2"),migrating=false;
+const pend=()=>dirtyS||dirtyF;
+const subTxt=()=>(!sb?"📱 Solo en este dispositivo":cloud=="ro"?"⚠️ Error de nube"+(lastErr?": "+lastErr:""):!navigator.onLine?"📴 Sin internet":cloud=="local"?"📱 Sin conexión"+(lastErr?": "+lastErr:""):"☁️ Sincronizado")+(pend()&&sb?" · ⏳ pendiente de subir":"")+(ADM&&sb?" · Admin":"");
 async function upload(b){const ext=((b.type||"").split("/")[1]||"bin").replace(/[^a-z0-9]/g,""),path=uid()+Date.now().toString(36)+"."+ext;
  const{error}=await sb.storage.from("media").upload(path,b,{contentType:b.type});if(error)throw error;return path}
-function push(){if(!ADM||!sb)return;clearTimeout(timer);timer=setTimeout(async()=>{timer=null;const{error}=await sb.from("app_state").upsert({id:1,json:S});cloud=error?"ro":"cloud";chrome()},600)}
-function save(){if(!ADM)return;try{localStorage.setItem("laperla2",JSON.stringify(S))}catch(e){}push()}
+const nerr=e=>{if(isOff(e))cloud="local";else{cloud="ro";lastErr=(e&&e.message)||String(e)}};
+async function doPushS(){timer=null;if(!sb||!ADM)return;if(!navigator.onLine||(freshS&&!pulledOnce)){chrome();return}
+ try{const{error}=await sb.from("app_state").upsert({id:1,json:S});if(error)throw error;cloud="cloud";lastErr="";dirtyS=false;lsDel("lp_ds")}catch(e){nerr(e)}chrome()}
+function push(){if(!ADM||!sb)return;clearTimeout(timer);timer=setTimeout(doPushS,600)}
+function save(){if(!ADM)return;lsSet("laperla2",JSON.stringify(S));dirtyS=true;lsSet("lp_ds","1");push()}
 function up(){save();render()}
-async function pull(){if(!sb)return;pullF();
+async function pullS(){
  try{const{data,error}=await sb.from("app_state").select("json").eq("id",1).maybeSingle();if(error)throw error;cloud="cloud";lastErr="";
-  if(data&&data.json&&data.json.series){const r=migrate(data.json);if(JSON.stringify(r)!==JSON.stringify(S)&&!timer){S=r;try{localStorage.setItem("laperla2",JSON.stringify(S))}catch(e){}render()}}
-  else if(ADM)push()}catch(e){cloud="local";lastErr=(e&&e.message)||String(e)}chrome()}
+  if(data&&data.json&&data.json.series){
+   if(freshS&&!pulledOnce){dirtyS=false;lsDel("lp_ds");S=migrate(data.json);lsSet("laperla2",JSON.stringify(S));render()}
+   else if(!timer&&!dirtyS){const r=migrate(data.json);if(JSON.stringify(r)!==JSON.stringify(S)){S=r;lsSet("laperla2",JSON.stringify(S));render()}}
+  }else if(ADM){dirtyS=true;lsSet("lp_ds","1");push()}
+  pulledOnce=true}catch(e){nerr(e)}}
+async function migrateImages(){if(migrating||!sb||!ADM||!navigator.onLine)return;migrating=true;
+ const jobs=[],add=(o,k,w)=>{if(typeof o[k]=="string"&&o[k].startsWith("data:image"))jobs.push([o,k,w])};
+ add(S.team,"crest","S");Object.values(S.series).forEach(d=>{d.players.forEach(p=>add(p,"photo","S"));d.jerseys.forEach(j=>add(j,"img","S"))});F.products.forEach(p=>add(p,"img","F"));
+ const ch={S:false,F:false};
+ try{for(const[o,k,w]of jobs){const b=await(await fetch(o[k])).blob();o[k]=await upload(b);ch[w]=true}}catch(e){}
+ migrating=false;if(ch.S)save();if(ch.F)fsave();if(ch.S||ch.F)render()}
+async function pull(){if(!sb)return;if(!navigator.onLine){chrome();fst();return}
+ if(ADM)await migrateImages();
+ if(dirtyS&&ADM)await doPushS();else await pullS();
+ await syncF();chrome()}
 function setAdm(v){ADM=v;document.body.classList.toggle("adm",v);
- if(!v&&sb){try{localStorage.removeItem("laperla_f")}catch(e){}F=emptyF();fDirty=false}
- try{if(v&&!localStorage.getItem("laperla_tab"))tab="fiados"}catch(e){}
- if(v)pullF();render()}
+ if(!v&&sb){lsDel("laperla_f");lsDel("lp_df");lsDel("lp_ds");dirtyF=false;dirtyS=false;F=newF()}
+ try{if(v&&!lsGet("laperla_tab"))tab="fiados"}catch(e){}
+ render()}
 async function initCloud(){
- if(!window.supabase||SB_URL.startsWith("PEGA")){setAdm(true);return}
+ const conf=!SB_URL.startsWith("PEGA");
+ window.addEventListener("online",()=>{if(conf&&!sb)location.reload();else{cloud="local";pull()}});
+ window.addEventListener("offline",()=>{chrome();fst()});
+ if(!conf){setAdm(true);return}
+ if(!window.supabase){setAdm(lsGet("lp_adm")=="1");return}
  sb=window.supabase.createClient(SB_URL,SB_KEY);
- const{data}=await sb.auth.getSession();setAdm(!!data.session);
- sb.auth.onAuthStateChange((_e,s)=>{setAdm(!!s)});
+ let ses=null;try{ses=(await sb.auth.getSession()).data.session}catch(e){}
+ if(ses)lsSet("lp_adm","1");setAdm(!!ses||lsGet("lp_adm")=="1");
+ sb.auth.onAuthStateChange((ev,s)=>{if(ev=="SIGNED_OUT"){lsDel("lp_adm");setAdm(false)}else if(s){lsSet("lp_adm","1");if(!ADM)setAdm(true)}});
  await pull();setInterval(pull,60000);document.addEventListener("visibilitychange",()=>{if(!document.hidden)pull()})}
-function loginM(){if(!sb)return;if(ADM){if(confirm("¿Cerrar sesión de admin?"))sb.auth.signOut();return}
+function loginM(){if(!sb)return;if(ADM){if(confirm(pend()?"Hay cambios sin subir a la nube; si cierras sesión se perderán. ¿Cerrar sesión igual?":"¿Cerrar sesión de admin?"))sb.auth.signOut();return}
  openM(`<h2>Acceso admin</h2><input id="le" type="email" placeholder="Correo"><input id="lp" type="password" placeholder="Contraseña"><p class="mu" id="lm"></p><div class="row"><button class="btn g sp" onclick="closeM()">Cancelar</button><button class="btn sp" onclick="doLogin()">Entrar</button></div>`)}
-async function doLogin(){const{error}=await sb.auth.signInWithPassword({email:$("#le").value.trim(),password:$("#lp").value});if(error)return $("#lm").textContent="Correo o contraseña incorrectos";closeM();await pull()}
+async function doLogin(){const{error}=await sb.auth.signInWithPassword({email:$("#le").value.trim(),password:$("#lp").value});if(error)return $("#lm").textContent=navigator.onLine?"Correo o contraseña incorrectos":"Necesitas internet para entrar";closeM();await pull()}
 const src=v=>!v?"":v.startsWith("data:")?v:SB_URL+"/storage/v1/object/public/media/"+v;
 function fileToImg(file,o){return new Promise(res=>{const r=new FileReader();r.onload=()=>{const im=new Image();im.onload=()=>{const c=document.createElement("canvas"),x=c.getContext("2d");
  if(o.sq){c.width=c.height=o.max;const s=Math.min(im.width,im.height);x.drawImage(im,(im.width-s)/2,(im.height-s)/2,s,s,0,0,o.max,o.max)}
  else{const k=Math.min(1,o.max/Math.max(im.width,im.height));c.width=im.width*k;c.height=im.height*k;x.drawImage(im,0,0,c.width,c.height)}
  const type=o.sq?"image/jpeg":"image/png";
- c.toBlob(async b=>{if(ADM&&sb){try{return res(await upload(b))}catch(e){alert("No se pudo subir la imagen: "+(e.message||e));return res("")}}res(c.toDataURL(type,.85))},type,.85)};im.onerror=()=>{alert("No se pudo leer esa imagen, prueba con JPG o PNG");res("")};im.src=r.result};r.readAsDataURL(file)})}
+ c.toBlob(async b=>{if(ADM&&sb&&navigator.onLine){try{return res(await upload(b))}catch(e){if(isOff(e))return res(c.toDataURL(type,.85));alert("No se pudo subir la imagen: "+(e.message||e));return res("")}}res(c.toDataURL(type,.85))},type,.85)};im.onerror=()=>{alert("No se pudo leer esa imagen, prueba con JPG o PNG");res("")};im.src=r.result};r.readAsDataURL(file)})}
 const pl=id=>D().players.find(p=>p.id==id);
 const av=p=>`<div class="av">${p&&p.photo?`<img src="${src(p.photo)}" alt="">`:esc((p?p.name:"?").split(" ").map(w=>w[0]).slice(0,2).join(""))}</div>`;
 let tab=(()=>{try{return localStorage.getItem("laperla_tab")||"plantel"}catch(e){return"plantel"}})(),sub={rank:"g",season:"todas",match:null,clip:"ok",cs:"todas",f:"fiar"};
 const tabs=[["fiados","🧾","Fiados"],["plantel","👥","Plantel"],["partidos","📅","Partidos"],["tablas","🏆","Tablas"],["formacion","📋","Formación"],["clips","🎬","Clips"],["equipo","🛡️","Equipo"]];
 function chrome(){const lg=$("#lg");if(lg){lg.style.display=sb?"":"none";lg.textContent=ADM?"🔓":"🔐"}
  $("#sr").innerHTML=tab=="clips"||tab=="fiados"?"":`<button class="srb" onclick="pickSerie()">Serie: <b>${serieName(AC)}</b> ▾</button>`;$("#nav").innerHTML=tabs.filter(t=>t[0]!="fiados"||ADM).map(t=>`<button class="${tab==t[0]?"on":""}" onclick="go('${t[0]}')"><span>${t[1]}</span>${t[2]}</button>`).join("");
- $("#sub").textContent=subTxt()+" · v5";$("#ht").textContent=S.team.name+" FC";$("#hl").innerHTML=S.team.crest?`<img src="${src(S.team.crest)}" alt="">`:"⚽"}
+ $("#sub").textContent=subTxt()+" · v6";$("#ht").textContent=S.team.name+" FC";$("#hl").innerHTML=S.team.crest?`<img src="${src(S.team.crest)}" alt="">`:"⚽"}
 function go(t){tab=t;sub.match=null;try{localStorage.setItem("laperla_tab",t)}catch(e){}render()}
 function totals(pid,season){let t={g:0,a:0,s:0,pj:0};D().matches.forEach(m=>{if(season!="todas"&&m.season!=season)return;const x=m.stats[pid];if(x){t.g+=x.g||0;t.a+=x.a||0;t.s+=x.s||0;t.pj++}});return t}
 const seasons=()=>[...new Set(D().matches.map(m=>m.season))].sort().reverse();
@@ -231,7 +255,7 @@ function vClips(){
  `<p class="mu">Próximamente: cualquier persona podrá enviar clips y llegarán a “Pendientes” para que tú los apruebes.</p>`}
 let tmpV=null;
 function formC(){tmpV=null;openM(`<h2>Subir clip</h2><input type="file" accept="video/*" onchange="tmpV=this.files[0]"><input id="ct" placeholder="Título (ej. Golazo de Mora)"><select id="cs">${SERIES.map(s=>`<option value="${s[0]}" ${s[0]==AC?"selected":""}>${s[1]}</option>`).join("")}</select><input id="cp" placeholder="Jugador (opcional)"><label class="mu"><input type="checkbox" id="cd" checked style="width:auto;margin-right:6px">Publicar directo (soy admin)</label><p class="mu" id="cm"></p><div class="row"><button class="btn g sp" onclick="closeM()">Cancelar</button><button class="btn sp" id="cb" onclick="addC()">Subir</button></div>`)}
-async function addC(){const f=tmpV,m=$("#cm");if(!f)return m.textContent="Elige un video";if(!ADM||!sb)return m.textContent="Subir videos necesita la nube y entrar como admin (🔐).";if(f.size>20*1024*1024)return m.textContent="El video pesa más de 20 MB; recórtalo.";
+async function addC(){const f=tmpV,m=$("#cm");if(!f)return m.textContent="Elige un video";if(!ADM||!sb)return m.textContent="Subir videos necesita la nube y entrar como admin (🔐).";if(!navigator.onLine)return m.textContent="Los videos necesitan internet.";if(f.size>20*1024*1024)return m.textContent="El video pesa más de 20 MB; recórtalo.";
  $("#cb").disabled=true;m.textContent="Subiendo…";
  try{const u={id:await upload(f)};S.clips.unshift({id:uid(),vid:u.id,title:$("#ct").value.trim()||"Clip",serie:$("#cs").value,player:$("#cp").value.trim(),status:$("#cd").checked?"aprobado":"pendiente",date:new Date().toISOString().slice(0,10)});closeM();up()}catch(e){m.textContent="No se pudo subir el video";$("#cb").disabled=false}}
 function setC(id,s){S.clips.find(c=>c.id==id).status=s;up()}
@@ -242,21 +266,38 @@ function addM(id){const r=$("#mr").value.trim();if(!r)return;const d=$("#md").va
  if(id)Object.assign(D().matches.find(x=>x.id==id),v);else D().matches.push({id:uid(),...v,stats:{}});closeM();up()}
 const emojiFor=n=>{n=n.toLowerCase();return /cerve|corona/.test(n)?"🍺":/michel/.test(n)?"🍹":/completo|hot/.test(n)?"🌭":/chuleta|carne/.test(n)?"🥩":/ccu|coca|beb|jugo|agua/.test(n)?"🥤":"🍽️"};
 const emptyF=()=>({products:[["Bebidas CCU",1000],["Coca Cola",1500],["Cervezas lata",1000],["Corona",1500],["Michelada",2000],["Completos",2000],["Chuletas",3000]].map(p=>({id:uid(),name:p[0],price:p[1],img:"",on:true})),people:[],entries:[],log:[]});
-let F;try{F=JSON.parse(localStorage.getItem("laperla_f")||"null")}catch(e){}F=F||emptyF();
-let timerF=null,fErr="",curName="",fDirty=false;
+const blankF=()=>({products:[],people:[],entries:[],log:[]}),newF=()=>window.LP_URL?blankF():emptyF();
+let F;try{F=JSON.parse(localStorage.getItem("laperla_f")||"null")}catch(e){}F=F||newF();
+let timerF=null,fErr="",curName="";
 const money=n=>"$"+Number(n||0).toLocaleString("es-CL");
 const nrm=s=>String(s||"").trim().toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g,"").replace(/\s+/g," ");
 const fPerson=name=>F.people.find(p=>nrm(p.name)==nrm(name));
 const owedP=pid=>F.entries.filter(e=>e.person==pid).reduce((a,e)=>a+(e.qty-e.paid)*e.price,0);
 const qtyP=(pid,prod)=>F.entries.filter(e=>e.person==pid&&e.prod==prod).reduce((a,e)=>a+e.qty-e.paid,0);
-const fStatus=()=>fErr?"⚠️ No se guardó en la nube: "+fErr:(sb?"☁️ Guardado en la nube":"📱 Solo en este dispositivo");
+const fStatus=()=>fErr?"⚠️ No se guardó en la nube: "+fErr:!sb?"📱 Solo en este dispositivo":!navigator.onLine?"📴 Sin internet: se subirá cuando vuelva":dirtyF?"⏳ Pendiente de subir":"☁️ Guardado en la nube";
 const fst=()=>{const s=$("#fst");if(s)s.textContent=fStatus()};
-function fsave(){if(!ADM)return;fDirty=true;try{localStorage.setItem("laperla_f",JSON.stringify(F))}catch(e){}pushF()}
-function pushF(){if(!ADM||!sb)return;clearTimeout(timerF);timerF=setTimeout(async()=>{timerF=null;const{error}=await sb.from("fiados").upsert({id:1,json:F});fErr=error?error.message:"";if(!error)fDirty=false;fst()},500)}
-async function pullF(){if(!sb||!ADM)return;
+function fsave(){if(!ADM)return;lsSet("laperla_f",JSON.stringify(F));dirtyF=true;lsSet("lp_df","1");pushF();fst()}
+function pushF(){if(!ADM||!sb)return;clearTimeout(timerF);timerF=setTimeout(doPushF,500)}
+const refreshF=()=>{if(tab!="fiados")return;if(sub.f=="fiar")fBody();else if(!$("#modal").classList.contains("open"))render()};
+function mergeF(a,b){
+ const rp=new Map(b.people.map(p=>[nrm(p.name),p.id])),ids=new Set(b.people.map(p=>p.id)),remap={};
+ a.people.forEach(p=>{if(!ids.has(p.id)){const r=rp.get(nrm(p.name));if(r)remap[p.id]=r}});
+ const fix=o=>remap[o.person]?{...o,person:remap[o.person]}:o;
+ const U=(x,y,f)=>{const m=new Map();[...x,...y].forEach(o=>{const p=m.get(o.id);m.set(o.id,p?f(p,o):o)});return[...m.values()]};
+ const byDate=(p,q)=>(p.date||"")<(q.date||"")?-1:1;
+ return{products:U(b.products,a.products,(p,o)=>o),people:U(b.people,a.people.filter(p=>!remap[p.id]),(p,o)=>o),
+  entries:U(b.entries,a.entries.map(fix),(p,o)=>({...o,qty:Math.max(p.qty,o.qty),paid:Math.max(p.paid,o.paid)})).sort(byDate),
+  log:U(b.log,a.log.map(fix),(p,o)=>o).sort(byDate)}}
+async function doPushF(){timerF=null;if(!sb||!ADM)return;if(!navigator.onLine){fst();return}
+ try{const r=await sb.from("fiados").select("json").eq("id",1).maybeSingle();if(r.error)throw r.error;
+  if(r.data&&r.data.json&&r.data.json.products){F=mergeF(F,r.data.json);lsSet("laperla_f",JSON.stringify(F))}
+  const w=await sb.from("fiados").upsert({id:1,json:F});if(w.error)throw w.error;fErr="";dirtyF=false;lsDel("lp_df");refreshF()}
+ catch(e){fErr=isOff(e)?"":((e&&e.message)||String(e))}fst()}
+async function syncF(){if(!sb||!ADM||!navigator.onLine)return;
+ if(dirtyF){await doPushF();return}
  try{const{data,error}=await sb.from("fiados").select("json").eq("id",1).maybeSingle();if(error)throw error;fErr="";
-  if(data&&data.json&&data.json.products){if(!timerF&&!fDirty&&JSON.stringify(data.json)!==JSON.stringify(F)){F=data.json;try{localStorage.setItem("laperla_f",JSON.stringify(F))}catch(e){}if(tab=="fiados")render()}}
-  else pushF()}catch(e){fErr=e.message||String(e)}fst()}
+  if(data&&data.json&&data.json.products){if(!timerF&&JSON.stringify(data.json)!==JSON.stringify(F)){F=data.json;lsSet("laperla_f",JSON.stringify(F));refreshF()}}
+  else{if(!F.products.length)F=emptyF();dirtyF=true;lsSet("lp_df","1");pushF()}}catch(e){fErr=isOff(e)?"":((e&&e.message)||String(e))}fst()}
 const pimg=p=>`<div class="pimg">${p.img?`<img src="${src(p.img)}" alt="">`:emojiFor(p.name)}</div>`;
 function vFiados(){
  const v=sub.f,T=[["fiar","➕ Fiar"],["res","📊 Resumen"],["deu","👥 Deudores"],["pro","🏷️ Productos"]];
@@ -275,15 +316,15 @@ function fBodyHtml(){
 function fPlus(id){const n=curName.trim();if(!n){$("#fname").focus();alert("Escribe primero el nombre");return}
  let p=fPerson(n);if(!p){p={id:uid(),name:n};F.people.push(p)}
  const pr=F.products.find(x=>x.id==id),now=new Date().toISOString();
- const e=F.entries.find(x=>x.person==p.id&&x.prod==id&&x.price==pr.price);
- if(e)e.qty++;else F.entries.push({id:uid(),person:p.id,prod:id,pname:pr.name,price:pr.price,qty:1,paid:0,date:now});
+ F.entries.push({id:uid(),person:p.id,prod:id,pname:pr.name,price:pr.price,qty:1,paid:0,date:now});
  F.log.push({id:uid(),date:now,person:p.id,pname:pr.name,price:pr.price,d:1});if(F.log.length>1500)F.log=F.log.slice(-1500);
  fsave();fBody()}
 function fPay(eid,from){const e=F.entries.find(x=>x.id==eid);if(!e||e.qty<=e.paid)return;e.paid++;
  F.log.push({id:uid(),date:new Date().toISOString(),person:e.person,pname:e.pname,price:e.price,d:-1});fsave();
  if(from=="d"){verD(e.person);render()}else{closeM();fBody()}}
+function grp(es){const m=new Map();es.forEach(e=>{const k=e.prod+"|"+e.price,g=m.get(k);if(g)g.u+=e.qty-e.paid;else m.set(k,{pname:e.pname,price:e.price,u:e.qty-e.paid,date:e.date,id:e.id})});return[...m.values()]}
 function fMinus(id){const p=fPerson(curName);if(!p)return;const es=F.entries.filter(x=>x.person==p.id&&x.prod==id&&x.qty>x.paid);if(!es.length)return;
- if(new Set(es.map(e=>e.price)).size>1){openM(`<h2>¿Cuál pagó?</h2><p class="mu">${esc(p.name)} tiene ${esc(es[0].pname)} fiado a distintos precios:</p>`+es.map(e=>`<button class="btn" style="width:100%;margin-bottom:10px;font-size:18px;padding:16px" onclick="fPay('${e.id}','f')">${money(e.price)} (quedan ${e.qty-e.paid}) · ${fd(e.date)}</button>`).join("")+`<button class="btn g" style="width:100%" onclick="closeM()">Cancelar</button>`);return}
+ const G=grp(es);if(G.length>1){openM(`<h2>¿Cuál pagó?</h2><p class="mu">${esc(p.name)} tiene ${esc(es[0].pname)} fiado a distintos precios:</p>`+G.map(g=>`<button class="btn" style="width:100%;margin-bottom:10px;font-size:18px;padding:16px" onclick="fPay('${g.id}','f')">${money(g.price)} (quedan ${g.u})</button>`).join("")+`<button class="btn g" style="width:100%" onclick="closeM()">Cancelar</button>`);return}
  fPay(es[0].id,"f")}
 function vRes(){
  const rows=F.products.map(pr=>{const es=F.entries.filter(e=>e.prod==pr.id&&e.qty>e.paid);const by={};
@@ -300,7 +341,7 @@ function vDeu(){const L=F.people.map(p=>owedP(p.id)).filter(o=>o>0);
 const fd=d=>new Date(d).toLocaleDateString("es-CL",{day:"2-digit",month:"2-digit"});
 function verD(pid){const p=F.people.find(x=>x.id==pid),es=F.entries.filter(e=>e.person==pid&&e.qty>e.paid),lg=F.log.filter(l=>l.person==pid).slice(-25).reverse();
  openM(`<h2>${esc(p.name)}</h2><div class="debt">Debe: ${money(owedP(pid))}</div><h2 style="font-size:15px">Lo que debe</h2>`+
- (es.map(e=>`<div class="card row"><span class="sp">${esc(e.pname)} ×${e.qty-e.paid}<div class="mu">a ${money(e.price)} c/u · desde ${fd(e.date)}</div></span><b>${money((e.qty-e.paid)*e.price)}</b><button class="btn g s" onclick="fPay('${e.id}','d')">Pagó 1</button></div>`).join("")||"<p class='mu'>Sin deuda.</p>")+
+ (grp(es).map(g=>`<div class="card row"><span class="sp">${esc(g.pname)} ×${g.u}<div class="mu">a ${money(g.price)} c/u · desde ${fd(g.date)}</div></span><b>${money(g.u*g.price)}</b><button class="btn g s" onclick="fPay('${g.id}','d')">Pagó 1</button></div>`).join("")||"<p class='mu'>Sin deuda.</p>")+
  `<h2 style="font-size:15px">Historial</h2>`+lg.map(l=>`<div class="mu">${fd(l.date)} · ${l.d>0?"fió":"pagó"} ${esc(l.pname)} ${l.d>0?"+":"−"}${Math.abs(l.d)} (${money(l.price)})</div>`).join("")+
  `<div class="row" style="margin-top:12px"><button class="btn sp" onclick="payAll('${pid}')">Pagó todo</button><button class="btn g sp" onclick="closeM()">Cerrar</button></div>`)}
 function payAll(pid){if(!confirm("¿Marcar toda la deuda como pagada?"))return;const now=new Date().toISOString();
